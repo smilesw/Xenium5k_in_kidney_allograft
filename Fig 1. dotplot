@@ -1,0 +1,23 @@
+library(Seurat)
+geneset=c("CUBN","HAVCR1","VCAM1","UMOD","KCNJ16","CALB1","GATA3","SLC4A1","ATP6V1B1",
+          "PODXL","PECAM1","PDGFRB","CLDN1","PLN","REN","FBLN5",
+          "CD68","CLEC10A","CD3E","CD79A","XBP1","KLRK1")
+DotPlot(Rejection, features = geneset, dot.scale = 7, scale.max = 60) +
+  scale_color_gradientn(
+    colours = c(
+      "#FFFF00",  # Yellow
+      "#FDBF3F",  # Orange
+      "#E76F51",  # Coral
+      "#A020A0",  # Purple
+      "#00008B"   # Dark blue
+    )) +
+  theme(
+    axis.text.x = element_text(
+      angle = 45,
+      hjust = 1,
+      vjust = 1,
+      color = "black"
+    ),
+    axis.title.x = element_blank(),
+    axis.title.y = element_blank()
+  )
