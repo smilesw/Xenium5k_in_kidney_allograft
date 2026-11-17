@@ -1,0 +1,45 @@
+library(Seurat)
+library(ggplot2)
+
+geneset=c("VSIG4","ANXA2","MSR1","FCGR2A","STAB1","MAF","CXCL12","SLC40A1","CXCL9","CXCL10","GBP1","FCGR3A","FCN1","CLEC9A","XCR1","CLEC10A","CD1C",
+          "CLEC4C","CCDC50","LAMP3","CD83","FSCN1")
+
+myeloid_cols <- c(
+  "VSIG4_macrophage"   = "#A52A2A",
+  "STAB1_macrophage"   = "aquamarine3",
+  "SLC40A1_macrophage" = "#FF1493",
+  "CXCL9_macrophage"   = "#6A3D9A",
+  "Monocyte"           = "#4D4D4D",
+  "cDC1"               = "#4DAF4A",
+  "cDC2"               = "#E78AC3",
+  "pDC"                = "#4EA3D9",
+  "mregDC"             = "#D4B000"
+)
+
+DoHeatmap(
+  Rejection_myeloid,
+  features = geneset,
+  group.colors = myeloid_cols,
+  slot = "scale.data",
+  disp.min = -2,
+  disp.max = 2,
+  raster = TRUE,
+  label = FALSE
+) +
+  scale_fill_gradientn(
+    colours = c(
+      "#27346A",
+      "#101010",
+      "#FFD54F"
+    ),
+    values = c(0, 0.5, 1),
+    limits = c(-2, 2),
+    name = "Scaled expression"
+  ) +
+  theme(
+    axis.text.x = element_blank(),
+    axis.ticks.x = element_blank(),
+    axis.title.x = element_blank(),
+    axis.text.y = element_text(size = 14, color = "black"),
+    legend.title = element_text(size = 10)
+  )
