@@ -1,0 +1,188 @@
+library(Seurat)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(patchwork)
+library(scales)
+
+# total dataset
+group_order <- c(
+  "ATN",
+  "Borderline",  
+  "TCMR",
+  "Active_AMR",
+  "CA_AMR",
+  "CA_AMR_borderline"
+  )
+celltype_order <- c("PT", "Injured_PT", "TAL", "DCT","CNT", "PC", "ICA", "ICB",
+                    "Podocyte", "EC", "MES", "PEC","VSMC", "JGC", "Fibroblast",
+                    "Macrophage", "Monocyte", "DC","T_cell", "B_cell", "Plasma_cell",
+                    "NK_cell", "Unknown")
+meta <- Rejection2@meta.data %>%
+  mutate(
+    group = factor(group, levels = group_order)
+  )
+meta$celltype2=factor(meta$celltype2, levels = rev(celltype_order))
+
+prop_df <- meta %>%
+  filter(!is.na(celltype2), !is.na(group)) %>%
+  count(celltype2, group, name = "n") %>%
+  group_by(celltype2) %>%
+  mutate(
+    total = sum(n),
+    proportion = 100 * n / total
+  ) %>%
+  ungroup()
+
+total_df <- prop_df %>%
+  group_by(celltype2) %>%
+  summarise(
+    total = first(total),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    label = paste0(
+      comma(total),
+      " (",
+      round(100 * total / sum(total), 1),
+      "%)"
+    )
+  )
+
+p_bar <- ggplot(
+  prop_df,
+  aes(
+    x = proportion,
+    y = celltype2,
+    fill = group
+  )
+) +
+  geom_col(
+    width = 0.75,
+    position = position_stack(reverse = TRUE)
+  ) +
+  geom_text(
+    data = total_df,
+    aes(
+      x = 103,
+      y = celltype2,
+      label = label
+    ),
+    inherit.aes = FALSE,
+    hjust = 0,
+    size = 5,
+    colour = "black"
+  ) +
+  scale_fill_manual(
+    values = c(
+      "ATN" = "chartreuse4",
+      "Borderline" = "skyblue",
+      "TCMR" = "dodgerblue",
+      "Active_ABMR" = "#E1B0FF",
+      "CA_ABMR" = "#DA6FD5",
+      "CA_ABMR_borderline" = "#801B80"
+    ),
+    breaks = group_order
+  ) +
+  scale_x_continuous(
+    breaks = c(0, 25, 50, 75, 100),
+    expand = expansion(mult = c(0, 0))
+  ) +
+  coord_cartesian(
+    xlim = c(0, 145),
+    clip = "off"
+  ) +
+  labs(
+    x = "Proportion (%)",
+    y = NULL,
+    fill = "Group"
+  ) +
+  theme_classic(base_size = 12) +
+  theme(
+    axis.text.x = element_text(size = 15, color = "black"),
+    axis.text.y = element_blank(),
+    legend.position = "right",
+    plot.margin = margin(5, 15, 5, 5)
+  )
+
+p_bar
+
+# myeloid immune cells
+S1=Rejection_myeloid
+S1$celltype=droplevels(S1$celltype)
+celltype_order=names(table(S1$celltype))
+meta <- S1@meta.data %>%
+  mutate(
+    group = factor(group, levels = group_order)
+  )
+meta$celltype=factor(meta$celltype, levels = rev(celltype_order))
+
+prop_df <- meta %>%
+  filter(!is.na(celltype), !is.na(group)) %>%
+  count(celltype, group, name = "n") %>%
+  group_by(celltype) %>%
+  mutate(
+    total = sum(n),
+    proportion = 100 * n / total
+  ) %>%
+  ungroup()
+
+total_df <- prop_df %>%
+  group_by(celltype) %>%
+  summarise(
+    total = first(total),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    label = paste0(
+      comma(total),
+      " (",
+      round(100 * total / sum(total), 1),
+      "%)"
+    )
+  )
+
+p_bar <- ggplot(
+  prop_df,
+  aes(
+    x = proportion,
+    y = celltype,
+    fill = group
+  )
+) +
+  geom_col(
+    width = 0.75,
+    position = position_stack(reverse = TRUE)
+  ) +
+  scale_fill_manual(
+    values = c(
+      "ATN" = "chartreuse4",
+      "Borderline" = "skyblue",
+      "TCMR" = "dodgerblue",
+      "Active_ABMR" = "#E1B0FF",
+      "CA_ABMR" = "#DA6FD5",
+      "CA_ABMR_borderline" = "#801B80"
+    ),
+    breaks = group_order
+  ) +
+  scale_x_continuous(
+    breaks = c(0, 25, 50, 75, 100),
+    expand = expansion(mult = c(0, 0))
+  ) +
+  coord_cartesian(
+    xlim = c(0, 100),
+  ) +
+  labs(
+    x = "Proportion (%)",
+    y = NULL,
+    fill = "Group"
+  ) +
+  theme_classic(base_size = 12) +
+  theme(
+    axis.text.x = element_text(size = 14, color = "black"),
+    axis.text.y = element_text(size = 14, color = "black"),
+    legend.position = "right",
+    plot.margin = margin(5, 15, 5, 5)
+  )
+
+p_bar
