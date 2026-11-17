@@ -3,18 +3,7 @@ library(dplyr)
 library(ggplot2)
 library(scales)
 
-Rejection_fov3$group <- gsub(
-  "ABMR",
-  "AMR",
-  Rejection_fov3$group
-)
-Rejection2$group <- gsub(
-  "ABMR",
-  "AMR",
-  Rejection2$group
-)
-
-df <- Rejection_fov3@meta.data %>%
+df <- Rejection@meta.data %>%
   as.data.frame() %>%
   dplyr::filter(
     !is.na(label),
@@ -43,7 +32,6 @@ df <- df %>%
     )
   )
 
-# Rejection group 순서
 group_order <- c(
   "ATN",
   "Borderline for acute TCMR",
@@ -53,7 +41,6 @@ group_order <- c(
   "Chronic active AMR with borderline"
 )
 
-# Group별 cell 수
 group_df <- df %>%
   group_by(group) %>%
   summarise(total = sum(n), .groups = "drop") %>%
@@ -67,7 +54,6 @@ group_df <- df %>%
     mid = (start + end) / 2
   )
 
-# Label별 좌표
 label_df <- df %>%
   dplyr::left_join(
     group_df %>%
@@ -86,7 +72,6 @@ label_df <- df %>%
   ) %>%
   dplyr::ungroup()
 
-# Rejection group별 색상
 group_colors <- c(
   "ATN" = "chartreuse4",
   "Borderline for acute TCMR" = "skyblue",
@@ -97,8 +82,6 @@ group_colors <- c(
 )
 
 p <- ggplot() +
-  
-  # Inner ring: biopsy core
   geom_rect(
     data = label_df,
     aes(
@@ -111,8 +94,6 @@ p <- ggplot() +
     color = "white",
     linewidth = 0.5
   ) +
-  
-  # Outer ring: aggregated rejection group
   geom_rect(
     data = group_df,
     aes(
@@ -125,8 +106,6 @@ p <- ggplot() +
     color = "white",
     linewidth = 0.8
   ) +
-  
-  # Inner labels
   geom_text(
     data = label_df,
     aes(
@@ -136,8 +115,6 @@ p <- ggplot() +
     ),
     size = 3.5
   ) +
-  
-  # Outer labels: rejection group name only
   geom_text(
     data = group_df,
     aes(
@@ -151,8 +128,7 @@ p <- ggplot() +
     ),
     size = 4,
     fontface = "bold"
-  ) +
-  
+  ) +  
   annotate(
     "text",
     x = 0,
@@ -161,22 +137,17 @@ p <- ggplot() +
     size = 4.5,
     fontface = "bold",
     color = "black"
-  ) +
-  
+  ) +  
   scale_fill_manual(
     values = group_colors,
     drop = FALSE
   ) +
-  
   coord_polar(
     theta = "y",
     start = -pi/2
   ) +
-  
   xlim(0, 3) +
-  
   theme_void() +
-  
   theme(
     plot.title = element_text(
       hjust = 0.5,
@@ -184,11 +155,5 @@ p <- ggplot() +
       size = 15
     ),
     legend.position = "right"
-  ) +
-  
-  labs(
-    title = "Cell distribution by biopsy core and rejection group",
-    fill = "Rejection group"
-  )
-
+  ) 
 print(p)
