@@ -1,0 +1,63 @@
+library(ggplot2)
+library(readxl)
+library(dplyr)
+
+data = read_excel("D:/Xenium_5k/geneset.xlsx")
+phago=data$GOBP_PHAGOCYTOSIS
+lymph=data$GOBP_LYMPHOCYTE_COSTIMULATION
+humoral=data$GOBP_HUMORAL_IMMUNE_RESPONSE
+phago=intersect(phago, rownames(Rejection_myeloid))
+lymph=intersect(lymph, rownames(Rejection_myeloid))
+humoral=intersect(humoral, rownames(Rejection_myeloid))
+
+Rejection_myeloid <- AddModuleScore(Rejection_myeloid, features = list(phago), name="phago")
+Rejection_myeloid <- AddModuleScore(Rejection_myeloid, features = list(lymph), name="lymph")
+Rejection_myeloid <- AddModuleScore(Rejection_myeloid, features = list(humoral), name="humoral")
+
+myeloid_cols <- c(
+  "VSIG4_macrophage"   = "#A52A2A",
+  "STAB1_macrophage"   = "aquamarine3",
+  "SLC40A1_macrophage" = "#FF1493",
+  "CXCL9_macrophage"   = "#6A3D9A",
+  "Monocyte"           = "#4D4D4D",
+  "cDC1"               = "#4DAF4A",
+  "cDC2"               = "#E78AC3",
+  "pDC"                = "#4EA3D9",
+  "mregDC"             = "#D4B000"
+)
+
+p <- VlnPlot(
+  Rejection_myeloid,
+  features = c("phago1", "lymph1", "humoral1"),
+  stack = TRUE,
+  flip = TRUE,
+  fill.by = "ident",
+  cols = myeloid_cols
+)
+
+p +
+  facet_grid(
+    rows = vars(feature),
+    scales = "free_y",
+    switch = "y",
+    labeller = labeller(
+      feature = c(
+        phago1 = "Phagocytosis",
+        lymph1 = "Lymphocyte costimulation",
+        humoral1 = "Humoral immune response"
+      )
+    )
+  ) +
+  theme_bw() +
+  theme(
+    axis.title.x = element_blank(),
+    axis.text.x = element_blank(),
+    legend.position = "none",
+    strip.placement = "outside",
+    strip.background = element_blank(),
+    strip.text.y.left = element_text(
+      angle = 0,
+      face = "bold",
+      size = 11
+    )
+  )
