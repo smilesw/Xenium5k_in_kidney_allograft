@@ -1,0 +1,58 @@
+library(speckle)
+library(limma)
+library(edgeR)
+library(pheatmap)
+library(gt)
+library(Seurat)
+library(tibble)
+library(tidyverse)
+
+df=Rejection@meta.data
+df=df[,c(13,22:38)]
+df=df %>% rownames_to_column("ID")
+
+output.logit <- propeller(clusters=df$celltype3, sample=df$label, group=df$group, transform="logit")
+output.logit
+
+output.asin <- propeller(clusters=df$celltype3, sample=df$label, group=df$group, transform="asin")
+output.asin
+
+
+props.df <- getTransformedProps(clusters=df$celltype3, sample=df$label4, transform="logit")
+props.df$Proportions <- props.df$Proportions * 100
+df_plot <- props.df$Proportions %>%
+  as.data.frame() %>%
+  mutate(group = str_remove(sample, "[0-9]+$"))
+df_plot$group <- factor(df_plot$group, levels = c("ATN", "Borderline", "TCMR", "Active_AMR", "CA_AMR", "CA_AMR_borderline" ))
+plot_fun <- function(cell){
+  ggplot(df_plot %>% filter(clusters == cell),
+         aes(x = group, y = Freq, fill = group)) +
+    geom_boxplot(width = 0.6, outlier.shape = NA, alpha = 0.7) +
+    geom_jitter(width = 0.12, size = 2.0, color = "black") +
+    theme_bw() +
+    theme(
+      axis.text.x = element_text(angle = 45, hjust = 1, size = 12, face = "bold"),
+      axis.text.y = element_text(size = 12, face = "bold"),
+      axis.title = element_text(size = 14, face = "bold"),
+      plot.title = element_text(size = 16, face = "bold", hjust = 0.5),
+      legend.position = "none"
+    ) +
+    scale_fill_manual(values = c(
+      "ATN" = "chartreuse4",
+      "Borderline" = "skyblue",
+      "TCMR" = "dodgerblue",
+      "Active AMR" = "#E1B0FF",
+      "CA_AMR" = "#DA6FD5",
+      "CA_AMR_borderline" = "#801B80"
+    )) +
+    labs(x = "", y = "Proportions", title = cell)
+}
+
+p1 <- plot_fun("B_cell")
+p2 <- plot_fun("T_cell")
+p3 <- plot_fun("cDC1")
+p4 <- plot_fun("cDC2")
+p5 <- plot_fun("pDC")
+p6 <- plot_fun("CCL19_myofibroblast")
+p7 <- plot_fun("Podocyte")
+p1|p2|p3|p4|p5|p6|p7
